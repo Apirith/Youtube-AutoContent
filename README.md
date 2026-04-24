@@ -122,9 +122,3 @@ python pipeline/runner.py
 | Production dashboard | 🔄 In progress |
 
 ---
-
-## About
-
-Built by **ApMakes** — a TPM and builder at the intersection of AI tools, content, and systems thinking.
-
-📺 [ToolStack on YouTube](#) · 🐙 [GitHub](https://github.com/yourusername)
