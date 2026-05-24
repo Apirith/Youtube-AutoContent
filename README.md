@@ -53,7 +53,7 @@ A companion dashboard supports the full post-script workflow:
 | Script Generation | Claude API (Anthropic) |
 | Voiceover | ElevenLabs API |
 | Sources | Hacker News API, Reddit API, GitHub Trending, Product Hunt API |
-| Dashboard | *(In progress)* |
+| Dashboard | In Production |
 
 ---
 
