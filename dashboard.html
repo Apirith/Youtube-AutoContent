@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToolStack — Pipeline Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base:     #0d0f12;
+      --bg-surface:  #141619;
+      --bg-card:     #1a1d22;
+      --bg-hover:    #1f2228;
+      --border:      rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.12);
+      --text-primary:   #e8e6e0;
+      --text-secondary: #888780;
+      --text-muted:     #555350;
+      --amber-100: #FAC775;
+      --amber-400: #BA7517;
+      --amber-600: #854F0B;
+      --teal-100:  #9FE1CB;
+      --teal-400:  #1D9E75;
+      --red-100:   #F7C1C1;
+      --red-400:   #E24B4A;
+      --blue-100:  #B5D4F4;
+      --blue-400:  #378ADD;
+      --green-100: #C0DD97;
+      --green-400: #639922;
+      --gray-400:  #888780;
+      --coral-100: #F5C4B3;
+      --coral-400: #D85A30;
+      --purple-100:#CECBF6;
+      --purple-400:#7F77DD;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ---------- layout ---------- */
+    .shell { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 0.5px solid var(--border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: rgba(250,199,117,0.15);
+      border: 0.5px solid rgba(250,199,117,0.3);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark i { font-size: 16px; color: var(--amber-100); }
+    .logo-text { font-size: 14px; font-weight: 500; }
+    .logo-sub  { font-size: 11px; color: var(--text-muted); }
+
+    .nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none; background: transparent;
+      width: 100%; text-align: left;
+      transition: background 0.15s;
+    }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .nav-item.active { background: rgba(250,199,117,0.1); color: var(--amber-100); }
+    .nav-item i { font-size: 15px; }
+
+    .status-block { margin-top: auto; }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--green-400);
+      padding: 6px 10px;
+      background: rgba(99,153,34,0.08);
+      border: 0.5px solid rgba(99,153,34,0.2);
+      border-radius: var(--radius-sm);
+    }
+    .pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-400);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ---------- main ---------- */
+    .main { flex: 1; min-width: 0; padding: 2rem; overflow-y: auto; }
+
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    .page-title { font-size: 18px; font-weight: 500; }
+    .page-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .run-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(250,199,117,0.12);
+      border: 0.5px solid rgba(250,199,117,0.3);
+      color: var(--amber-100);
+      font-size: 12px; padding: 7px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .run-btn:hover { background: rgba(250,199,117,0.2); }
+    .run-btn i { font-size: 14px; }
+
+    /* ---------- stat cards ---------- */
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+
+    .stat {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+    }
+    .stat-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .stat-num { font-size: 22px; font-weight: 500; font-family: var(--font-mono); }
+    .stat-note { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .c-amber { color: var(--amber-100); }
+    .c-teal  { color: var(--teal-100); }
+    .c-red   { color: var(--red-100); }
+    .c-blue  { color: var(--blue-100); }
+    .c-gray  { color: var(--text-secondary); }
+
+    /* ---------- content grid ---------- */
+    .content-grid { display: grid; grid-template-columns: 1fr 300px; gap: 1.25rem; }
+
+    .panel {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .panel-title {
+      font-size: 11px; font-weight: 500; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .panel-title i { font-size: 13px; }
+    .panel-count {
+      font-size: 11px; font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* ---------- queue table ---------- */
+    .q-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .q-table th {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-muted); font-weight: 500;
+      padding: 0 10px 10px; text-align: left;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .q-table td {
+      padding: 9px 10px;
+      border-bottom: 0.5px solid var(--border);
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+    .q-table tr:last-child td { border-bottom: none; }
+    .q-table tr:hover td { background: var(--bg-hover); }
+
+    .score-pill {
+      display: inline-block;
+      font-family: var(--font-mono); font-size: 11px;
+      padding: 2px 7px; border-radius: 999px;
+    }
+    .s-high { background: rgba(29,158,117,0.15); color: var(--teal-100); border: 0.5px solid rgba(29,158,117,0.3); }
+    .s-mid  { background: rgba(186,117,23,0.15); color: var(--amber-100); border: 0.5px solid rgba(186,117,23,0.3); }
+    .s-low  { background: rgba(136,135,128,0.15); color: var(--gray-400); border: 0.5px solid rgba(136,135,128,0.2); }
+
+    .src-tag {
+      display: inline-block; font-size: 10px; font-family: var(--font-mono);
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .src-hn { background: rgba(216,90,48,0.12); color: var(--coral-100); }
+    .src-gh { background: rgba(55,138,221,0.12); color: var(--blue-100); }
+    .src-rd { background: rgba(226,75,74,0.12); color: var(--red-100); }
+    .src-ph { background: rgba(127,119,221,0.12); color: var(--purple-100); }
+
+    .tool-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tool-url  { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+
+    .script-done    { font-size: 11px; color: var(--teal-400); display: flex; align-items: center; gap: 4px; }
+    .script-pending { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+    /* ---------- right column ---------- */
+    .right-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .legend-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+    .run-list { display: flex; flex-direction: column; gap: 10px; }
+    .run-row { display: flex; gap: 10px; }
+    .run-indicator { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .run-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(250,199,117,0.4); flex-shrink: 0; margin-top: 4px; }
+    .run-line { width: 1px; flex: 1; background: var(--border); margin: 3px 0; min-height: 16px; }
+    .run-row:last-child .run-line { display: none; }
+    .run-ts { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap; margin-bottom: 4px; }
+    .run-label { font-size: 12px; color: var(--text-primary); }
+    .run-chips { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+    .chip { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-family: var(--font-mono); }
+    .ch-found   { background: rgba(55,138,221,0.12); color: var(--blue-100); }
+    .ch-queued  { background: rgba(29,158,117,0.12); color: var(--teal-100); }
+    .ch-skipped { background: rgba(136,135,128,0.12); color: var(--gray-400); }
+
+    /* ---------- loading overlay ---------- */
+    #loading {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg-base);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px;
+    }
+    #loading .spin {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--amber-100);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    #loading p { font-size: 13px; color: var(--text-secondary); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- error banner ---------- */
+    #error-banner {
+      display: none;
+      background: rgba(226,75,74,0.08);
+      border: 0.5px solid rgba(226,75,74,0.3);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: var(--red-100);
+      font-size: 12px;
+      margin-bottom: 1rem;
+    }
+    #error-banner b { font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>
+  <p>Connecting to pipeline…</p>
+</div>
+
+<div class="shell" id="app" style="display:none;">
+
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div>
+      <div class="logo">
+        <div class="logo-mark"><i class="ti ti-stack" aria-hidden="true"></i></div>
+        <div>
+          <div class="logo-text">ToolStack</div>
+          <div class="logo-sub">Pipeline dashboard</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Dashboard navigation">
+      <button class="nav-item active"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Overview</button>
+      <button class="nav-item"><i class="ti ti-list" aria-hidden="true"></i>Queue</button>
+      <button class="nav-item"><i class="ti ti-file-text" aria-hidden="true"></i>Scripts</button>
+      <button class="nav-item"><i class="ti ti-chart-bar" aria-hidden="true"></i>Analytics</button>
+      <button class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i>Config</button>
+    </nav>
+
+    <div class="status-block">
+      <div class="status-pill" id="pipeline-status">
+        <div class="pulse"></div>
+        pipeline active
+      </div>
+      <div style="margin-top:10px; font-size:10px; color:var(--text-muted); padding:0 2px;">
+        Last run: <span id="last-run-ts" style="font-family:var(--font-mono);">—</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- main -->
+  <main class="main">
+    <div id="error-banner"></div>
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Overview</div>
+        <div class="page-sub" id="run-meta">Loading pipeline data…</div>
+      </div>
+      <button class="run-btn" onclick="triggerRun()">
+        <i class="ti ti-player-play" aria-hidden="true"></i>Run pipeline
+      </button>
+    </div>
+
+    <!-- stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-label">Total seen</div>
+        <div class="stat-num c-gray" id="s-total">—</div>
+        <div class="stat-note" id="s-runs">— runs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Queued</div>
+        <div class="stat-num c-amber" id="s-queued">—</div>
+        <div class="stat-note">awaiting script</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Scripted</div>
+        <div class="stat-num c-teal" id="s-scripted">—</div>
+        <div class="stat-note" id="s-pct">—% of queue</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Skipped</div>
+        <div class="stat-num" id="s-skipped">—</div>
+        <div class="stat-note">gap / score filter</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Pipeline runs</div>
+        <div class="stat-num c-blue" id="s-pruns">—</div>
+        <div class="stat-note">all time</div>
+      </div>
+    </div>
+
+    <!-- content grid -->
+    <div class="content-grid">
+      <!-- queue table -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="ti ti-list" aria-hidden="true"></i>Script queue</div>
+          <div class="panel-count" id="queue-count">— items</div>
+        </div>
+        <table class="q-table" aria-label="Script queue">
+          <thead>
+            <tr>
+              <th style="width:56px;">Score</th>
+              <th style="width:200px;">Tool</th>
+              <th style="width:80px;">Source</th>
+              <th style="width:55px;">YT vids</th>
+              <th style="width:90px;">Script</th>
+            </tr>
+          </thead>
+          <tbody id="queue-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- right column -->
+      <div class="right-col">
+
+        <!-- donut chart -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><i class="ti ti-chart-donut" aria-hidden="true"></i>Discovery sources</div>
+          </div>
+          <div class="legend-row" id="src-legend"></div>
+          <div style="position:relative; height:170px;">
+            <canvas id="srcChart" role="img"
+              aria-label="Donut chart showing distribution of tool discoveries by source">
+              Source breakdown loads dynamically.
+            </canvas>
+          </div>
+        </div>
+
+        <!-- run history -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><i class="ti ti-history" aria-hidden="true"></i>Run history</div>
+          </div>
+          <div class="run-list" id="run-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  // ─────────────────────────────────────────────────────────────
+  //  CONFIG — set this to your Python server URL
+  //  Run:  python server.py   (see server.py in this folder)
+  //  Then open dashboard.html in a browser
+  // ─────────────────────────────────────────────────────────────
+  const API = "http://localhost:5050";
+
+  // ─────────────────────────────────────────────────────────────
+  //  MOCK DATA — used as fallback when server is offline
+  //  Replace with real data once server.py is running
+  // ─────────────────────────────────────────────────────────────
+  const MOCK = {
+    stats: {
+      total_seen: 1284,
+      queued: 47,
+      scripted: 23,
+      skipped: 1214,
+      pipeline_runs: 12
+    },
+    queue: [
+      { score: 9.2, name: "Cursor Tab v2",      url: "github.com/getcursor/cursor",        source: "gh", yt_video_count: 2, script_generated: 1 },
+      { score: 8.8, name: "Gemini CLI",          url: "github.com/google-gemini/gemini-cli", source: "hn", yt_video_count: 3, script_generated: 1 },
+      { score: 8.4, name: "Val Town AI",         url: "val.town/ai",                        source: "rd", yt_video_count: 1, script_generated: 0 },
+      { score: 8.1, name: "Windsurf Wave 3",     url: "codeium.com/windsurf",               source: "ph", yt_video_count: 4, script_generated: 1 },
+      { score: 7.9, name: "Perplexity Comet",    url: "perplexity.ai/comet",                source: "hn", yt_video_count: 2, script_generated: 0 },
+      { score: 7.6, name: "Replit Agent V2",     url: "replit.com/agent",                   source: "rd", yt_video_count: 5, script_generated: 0 },
+      { score: 7.3, name: "Notion AI Q3",        url: "notion.so/ai-q3",                    source: "ph", yt_video_count: 6, script_generated: 0 },
+      { score: 7.1, name: "Linear Pulse",        url: "linear.app/pulse",                   source: "gh", yt_video_count: 1, script_generated: 0 },
+      { score: 6.9, name: "MistralCoder",        url: "mistral.ai/coder",                   source: "hn", yt_video_count: 3, script_generated: 0 },
+      { score: 6.7, name: "Supabase Workflows",  url: "supabase.com/workflows",             source: "gh", yt_video_count: 0, script_generated: 0 },
+    ],
+    sources: { "Hacker News": 487, "GitHub": 385, "Reddit": 257, "Product Hunt": 154 },
+    runs: [
+      { ts: "May 23 · 09:14", found: 183, queued: 8, skipped: 175 },
+      { ts: "May 23 · 03:14", found: 201, queued: 6, skipped: 195 },
+      { ts: "May 22 · 21:14", found: 195, queued: 11, skipped: 184 },
+      { ts: "May 22 · 15:14", found: 174, queued: 5, skipped: 169 },
+      { ts: "May 22 · 09:14", found: 210, queued: 7, skipped: 203 },
+    ]
+  };
+
+  let srcChart = null;
+
+  async function loadData() {
+    try {
+      const [stats, queue, sources, runs] = await Promise.all([
+        fetch(`${API}/stats`).then(r => r.json()),
+        fetch(`${API}/queue?limit=20`).then(r => r.json()),
+        fetch(`${API}/sources`).then(r => r.json()),
+        fetch(`${API}/runs?limit=5`).then(r => r.json()),
+      ]);
+      return { stats, queue, sources, runs };
+    } catch (e) {
+      showBanner("Server offline — showing mock data. Run <code>python server.py</code> to connect live.");
+      return MOCK;
+    }
+  }
+
+  function showBanner(msg) {
+    const b = document.getElementById("error-banner");
+    b.innerHTML = `<b>Note:</b> ${msg}`;
+    b.style.display = "block";
+  }
+
+  function scoreClass(s) {
+    if (s >= 8.5) return "s-high";
+    if (s >= 7.5) return "s-mid";
+    return "s-low";
+  }
+
+  const SRC_LABELS  = { hn: "HN", gh: "GitHub", rd: "Reddit", ph: "PH" };
+  const SRC_CLASSES = { hn: "src-hn", gh: "src-gh", rd: "src-rd", ph: "src-ph" };
+
+  function renderStats(s) {
+    document.getElementById("s-total").textContent   = s.total_seen.toLocaleString();
+    document.getElementById("s-queued").textContent  = s.queued;
+    document.getElementById("s-scripted").textContent = s.scripted;
+    document.getElementById("s-skipped").textContent = s.skipped.toLocaleString();
+    document.getElementById("s-pruns").textContent   = s.pipeline_runs;
+    document.getElementById("s-runs").textContent    = `${s.pipeline_runs} runs`;
+    const pct = s.queued > 0 ? Math.round((s.scripted / s.queued) * 100) : 0;
+    document.getElementById("s-pct").textContent     = `${pct}% of queue`;
+  }
+
+  function renderQueue(items) {
+    document.getElementById("queue-count").textContent = `${items.length} items`;
+    const tbody = document.getElementById("queue-tbody");
+    tbody.innerHTML = "";
+    items.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="score-pill ${scoreClass(t.score)}">${t.score.toFixed(1)}</span></td>
+        <td>
+          <div class="tool-name">${t.name}</div>
+          <div class="tool-url">${t.url}</div>
+        </td>
+        <td><span class="src-tag ${SRC_CLASSES[t.source] || ''}">${SRC_LABELS[t.source] || t.source}</span></td>
+        <td style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">${t.yt_video_count}</td>
+        <td>${t.script_generated
+          ? '<span class="script-done"><i class="ti ti-check" aria-hidden="true"></i> ready</span>'
+          : '<span class="script-pending"><i class="ti ti-clock" aria-hidden="true"></i> pending</span>'
+        }</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderSources(srcs) {
+    const entries = Object.entries(srcs);
+    const total   = entries.reduce((a, [, v]) => a + v, 0);
+    const colors  = ["#FAC775", "#85B7EB", "#F09595", "#AFA9EC"];
+
+    const legend = document.getElementById("src-legend");
+    legend.innerHTML = "";
+    entries.forEach(([name, val], i) => {
+      const pct = Math.round((val / total) * 100);
+      const el = document.createElement("div");
+      el.className = "legend-item";
+      el.innerHTML = `<span class="legend-dot" style="background:${colors[i]}"></span>${name} ${pct}%`;
+      legend.appendChild(el);
+    });
+
+    if (srcChart) srcChart.destroy();
+    srcChart = new Chart(document.getElementById("srcChart"), {
+      type: "doughnut",
+      data: {
+        labels: entries.map(e => e[0]),
+        datasets: [{
+          data: entries.map(e => e[1]),
+          backgroundColor: colors,
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "68%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} tools` } }
+        }
+      }
+    });
+  }
+
+  function renderRuns(runs) {
+    const list = document.getElementById("run-list");
+    list.innerHTML = "";
+    if (runs.length) {
+      document.getElementById("last-run-ts").textContent = runs[0].ts || "—";
+      document.getElementById("run-meta").textContent =
+        `Last pipeline run: ${runs[0].ts || "—"}`;
+    }
+    runs.forEach(r => {
+      const el = document.createElement("div");
+      el.className = "run-row";
+      el.innerHTML = `
+        <div class="run-indicator">
+          <div class="run-dot"></div>
+          <div class="run-line"></div>
+        </div>
+        <div style="flex:1;min-width:0;padding-bottom:8px;">
+          <div class="run-ts">${r.ts}</div>
+          <div class="run-label">Run completed</div>
+          <div class="run-chips">
+            <span class="chip ch-found">${r.found} found</span>
+            <span class="chip ch-queued">${r.queued} queued</span>
+            <span class="chip ch-skipped">${r.skipped} skipped</span>
+          </div>
+        </div>`;
+      list.appendChild(el);
+    });
+  }
+
+  async function triggerRun() {
+    const btn = document.querySelector(".run-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader-2 ti-spin" aria-hidden="true"></i>Running…';
+    try {
+      await fetch(`${API}/run`, { method: "POST" });
+      await init();
+    } catch (e) {
+      showBanner("Could not trigger run — is server.py running?");
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-player-play" aria-hidden="true"></i>Run pipeline';
+  }
+
+  async function init() {
+    const data = await loadData();
+    renderStats(data.stats);
+    renderQueue(data.queue);
+    renderSources(data.sources);
+    renderRuns(data.runs);
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+  }
+
+  init();
+
+  // Auto-refresh every 60 seconds
+  setInterval(async () => {
+    const data = await loadData();
+    renderStats(data.stats);
+    renderQueue(data.queue);
+    renderRuns(data.runs);
+  }, 60000);
+</script>
+</body>
+</html>
