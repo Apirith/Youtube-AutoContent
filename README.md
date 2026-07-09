@@ -6,7 +6,7 @@
 
 ## What It Does
 
-ToolStack is a full content production system built for the [ToolStack YouTube channel](https://youtube.com) — a channel dedicated to reviewing the latest AI tools as they drop. Instead of manually hunting for tools to cover, ToolStack does the legwork: sourcing, scoring, scripting, and staging everything for production.
+ToolStack is a full content production system built for the [ToolStack YouTube channel] — a channel dedicated to reviewing the latest AI tools as they drop. Instead of manually hunting for tools to cover, ToolStack does the legwork: sourcing, scoring, scripting, and staging everything for production.
 
 ---
 
